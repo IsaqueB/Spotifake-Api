@@ -13,7 +13,8 @@ const userSchema = mongoose.Schema({
     },
     password:{
         type: String,
-        required: true
+        required: true,
+        select: false
     },
     nickname:{
         type: String,
@@ -29,6 +30,10 @@ const userSchema = mongoose.Schema({
         required: true
     }
 })
+
+userSchema.methods.CheckPassword = function(password) {
+    return bcrypt.compare(password, this.password)
+}
 
 userSchema.pre("save", async function(next) {
     try{

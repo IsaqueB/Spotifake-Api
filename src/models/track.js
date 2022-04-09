@@ -9,11 +9,6 @@ const trackSchema = mongoose.Schema({
         type: String,
         required: true,
     },
-    // for stream
-    // chunks: [{
-    //     type: mongoose.Types.ObjectId,
-    //     ref: "Chunk",
-    // }]
     //Path in public folder for track file
     path: {
         type: String,

@@ -1,17 +1,19 @@
 const express = require("express")
 
+const {auth: AuthMiddleware} = require("../middlewares/auth")
 const Controller = require("../controllers/playlist")
-const AuthMiddleware = (_, res, next) => {
-    res.locals.user = {
-        id: "624cb75e5dd3f15979467c63"
-    }
-    next()
-}
 
 const router = express.Router()
 
-router.post("/", AuthMiddleware, Controller.create)
-router.get("/:id", AuthMiddleware, Controller.get)
 router.get("/user/:user", Controller.index)
+router.get("/:id", Controller.get)
+
+router.use(AuthMiddleware)
+
+router.post("/", Controller.create)
+router.put("/:id", Controller.update)
+router.put("/track/add/:id", Controller.add_track)
+router.put("/track/remove/:id", Controller.remove_track)
+router.delete("/:id", Controller.delete)
 
 module.exports = router
