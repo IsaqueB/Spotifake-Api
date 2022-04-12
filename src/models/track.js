@@ -9,6 +9,10 @@ const trackSchema = mongoose.Schema({
         type: String,
         required: true,
     },
+    album: {
+        type: String,
+        required: true,
+    },
     //Path in public folder for track file
     path: {
         type: String,

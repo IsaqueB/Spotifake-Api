@@ -29,7 +29,7 @@ module.exports = {
             }
             const playlist = await Playlist.findById(
                 id
-            )
+            ).populate("tracks")
             res.json(playlist)
         } catch (e) {
             res.status(400).json({e: e.message})
@@ -43,7 +43,7 @@ module.exports = {
             }
             const playlists = await Playlist.find({
                 createdBy: user
-            })
+            }).populate("tracks")
             res.json(playlists)
         } catch(e) {
             res.status(400).json({e: e.message})

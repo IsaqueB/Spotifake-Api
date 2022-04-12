@@ -1,7 +1,7 @@
 const mongoose = require("mongoose")
 
 
-mongoose.connect("mongodb://localhost:27017/spotifake",{
+mongoose.connect(process.env.MONGO_URL,{
 
 })
 
