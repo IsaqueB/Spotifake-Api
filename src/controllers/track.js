@@ -41,4 +41,18 @@ module.exports = {
             res.status(400).json({e: e.message})
         }
     },
+    getByName: async function(req, res) {
+        try{
+            const {name} = req.params
+            const track = await Track.findOne({
+                name
+            })
+            if (!track) {
+                throw Error("NOT_FOUND")
+            }
+            res.json(track)
+        } catch(e) {
+            res.status(400).json({e: e.message})
+        }
+    }
 }

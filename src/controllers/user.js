@@ -68,5 +68,28 @@ module.exports = {
         } catch (e) {
             res.status(400).json({e: e.message})
         }
-    }
+    },
+    update: async function(req, res){
+        try {
+            const {nickname} = req.body;
+            if (!nickname) {
+                throw new Error("MISSING")
+            }
+            const query = {
+                _id: res.locals.user.id,
+            }
+            const update = {
+                nickname
+            }
+            const options = {
+                new: true
+            }
+            const user = await User.findOneAndUpdate(query, update, options)
+            res.json({
+                user
+            })
+        } catch(e) {
+            res.status(400).json({e: e.message})
+        }
+    },
 }
