@@ -6,7 +6,18 @@ module.exports = {
         try {
             const {email, password, nickname, genre, birth} = req.body
             if (!email || !password || !nickname || !genre || !birth){
-                throw new Error("MISSING")
+                throw {
+                    type: "MISSING", 
+                    model: "USER", 
+                    method: "CREATE",
+                    extra: [
+                        email ? undefined : "EMAIL", 
+                        password ? undefined : "PASSWORD", 
+                        nickname ? undefined : "NICKNAME", 
+                        genre ? undefined : "GENRE", 
+                        birth ? undefined : "BIRTH"
+                    ].filter(entry => entry).join(" ")
+                }
             }
             let user = await User.create({
                 email,
@@ -15,81 +26,139 @@ module.exports = {
                 genre,
                 birth
             })
-            user.password = undefined
-            res.status(201).json(user)
+            res.user.created(user)
         } catch (e) {
-            res.status(400).json({e: e.message})
+            res.error(e)
         }
     },
     get: async function(req, res) {
         try{
             const {id} = req.params
             if (!id) {
-                throw new Error("MISSING")
+                throw {
+                    type: "MISSING", 
+                    model: "USER", 
+                    method: "GET",
+                    extra: "ID"
+                }
             }
             const user = await User.findById(id)
-            res.json(user)
+            if (!user) {
+                throw {
+                    type: "NOT_FOUND", 
+                    model: "USER", 
+                    method: "GET",
+                    extra: "USER"
+                }
+            }
+            res.user.one(user)
         } catch(e) {
-            res.status(400).json({e: e.message})
+            res.error(e)
         }
     },
     index: async function(_, res) {
         try {
             const users = await User.find()
-            res.json(users)
+            if (!users) {
+                throw {
+                    type: "NOT_FOUND", 
+                    model: "USER", 
+                    method: "INDEX",
+                    extra: "EMPTY"
+                }
+            }
+            res.user.many(users)
         } catch(e) {
-            res.status(400).json({e: e.message})
+            res.error(e)
         }
     },
     login: async function(req, res) {
         try {
             const {email, password} = req.body
             if (!email || !password) {
-                throw new Error("MISSING")
+                throw {
+                    type: "MISSING", 
+                    model: "USER", 
+                    method: "LOGIN",
+                    extra: [
+                        email ? undefined : "EMAIL", 
+                        password ? undefined : "PASSWORD", 
+                    ].filter(entry => entry).join(" ")
+                }
             }
             const query = {
                 email
             }
             const user = await User.findOne(query).select("+password")
             if (!user) {
-                throw new Error("MISSING")
+                throw {
+                    type: "UNAUTHORIZED", 
+                    model: "USER", 
+                    method: "LOGIN",
+                }
             }
             if (!await user.CheckPassword(password)) {
-                throw new Error("UNAUTHORIZED")
+                throw {
+                    type: "UNAUTHORIZED", 
+                    model: "USER", 
+                    method: "LOGIN"
+                }
             }
             const payload = {
                 id: user._id
             }
             const token = jwt.sign(payload, process.env.AUTH_SECRET)
-            res.json({
-                user,
-                token
-            })
+            res.user.login(user, token)
         } catch (e) {
-            res.status(400).json({e: e.message})
+            res.error(e)
         }
     },
     update: async function(req, res){
         try {
-            const {nickname} = req.body;
-            if (!nickname) {
-                throw new Error("MISSING")
+            const {email, password, nickname, genre, birth} = req.body;
+            
+            const update = {}
+
+            if (email) {
+                update.email = email
             }
-            const query = {
-                _id: res.locals.user.id,
+            if (password) {
+                update.password = password
             }
-            const update = {
-                nickname
+            if (nickname) {
+                update.nickname = nickname
             }
+            if (genre) {
+                update.genre = genre
+            }
+            if (birth) {
+                update.birth = birth
+            }
+
+            if (update.length() === 0) {
+                throw {
+                    type: "MISSING", 
+                    model: "USER", 
+                    method: "UPDATE",
+                    extra: "UPDATE_QUERY_EMPTY"
+                }
+            }
+            const id = res.locals.user.id
             const options = {
                 new: true
             }
-            const user = await User.findOneAndUpdate(query, update, options)
-            res.json({
-                user
-            })
+            const user = await User.findByIdAndUpdate(id, update, options)
+            if (!user) {
+                throw {
+                    type: "NOT_FOUND", 
+                    model: "USER", 
+                    method: "UPDATE",
+                    extra: "USER"
+                }
+            }
+            res.user.updated(user)
         } catch(e) {
-            res.status(400).json({e: e.message})
+            res.error(e)
         }
     },
 }

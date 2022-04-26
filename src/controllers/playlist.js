@@ -6,61 +6,103 @@ module.exports = {
         try{
             const {name} = req.body
             if (!name) {
-                throw Error("MISSING")
-            }
-            const {user} = res.locals
-            if (!user) {
-                throw Error("MISSING")
+                throw {
+                    type: "MISSING", 
+                    model: "PLAYLIST", 
+                    method: "CREATE",
+                    extra: "NAME"
+                }
             }
             const playlist = await Playlist.create({
                 name,
-                createdBy: user.id
+                createdBy: res.locals.user.id
             })
-            res.status(201).json(playlist)
+            res.playlist.created(playlist)
         } catch (e) {
-            res.status(400).json({e: e.message})
+            res.error(e)
         }
     },
     get: async function(req, res) {
         try {
             const {id} = req.params
             if (!id) {
-                throw Error("MISSING")
+                throw {
+                    type: "MISSING", 
+                    model: "PLAYLIST", 
+                    method: "GET",
+                    extra: "ID"
+                }
             }
             const playlist = await Playlist.findById(
                 id
             ).populate("tracks")
-            res.json(playlist)
+            if (!playlist) {
+                throw {
+                    type: "NOT_FOUND", 
+                    model: "PLAYLIST", 
+                    method: "GET",
+                    extra: "PLAYLIST"
+                }
+            }
+            res.playlist.one(playlist)
         } catch (e) {
-            res.status(400).json({e: e.message})
+            res.error(e)
         }
     },
     index: async function(req, res) {
         try{
             const {user} = req.params
             if (!user) {
-                throw Error("MISSING")
+                throw {
+                    type: "MISSING", 
+                    model: "PLAYLIST", 
+                    method: "INDEX",
+                    extra: "USER"
+                }
             }
             const playlists = await Playlist.find({
                 createdBy: user
             }).populate("tracks")
-            res.json(playlists)
+            if (!playlists) {
+                throw {
+                    type: "NOT_FOUND", 
+                    model: "PLAYLIST", 
+                    method: "INDEX",
+                    extra: "EMPTY"
+                }
+            }
+            res.playlist.many(playlists)
         } catch(e) {
-            res.status(400).json({e: e.message})
+            res.error(e)
         }
     },
     add_track: async function(req, res) {
         try{
             const {id} = req.params
             if (!id) {
-                throw Error("MISSING");
+                throw {
+                    type: "MISSING", 
+                    model: "PLAYLIST", 
+                    method: "ADD_TRACK",
+                    extra: "ID"
+                }
             }
             const {track} = req.body
             if (!track) {
-                throw Error("MISSING")
+                throw {
+                    type: "MISSING", 
+                    model: "PLAYLIST", 
+                    method: "ADD_TRACK",
+                    extra: "TRACK"
+                }
             }
             if (!await Track.findById(track)){
-                throw new Error("INVALID")
+                throw {
+                    type: "NOT_FOUND", 
+                    model: "PLAYLIST", 
+                    method: "ADD_TRACK",
+                    extra: "TRACK"
+                }
             }
             const query = {
                 _id: id,
@@ -75,23 +117,46 @@ module.exports = {
                 new: true
             }
             const playlist = await Playlist.findOneAndUpdate(query, update, options)
-            res.json(playlist)
+            if (!playlist) {
+                throw {
+                    type: "NOT_FOUND", 
+                    model: "PLAYLIST", 
+                    method: "REMOVE_TRACK",
+                    extra: "PLAYLIST"
+                }
+            }
+            res.playlist.updated(playlist)
         } catch(e) {
-            res.status(400).json({e: e.message})
+            res.error(e)
         }
     },
     remove_track: async function(req, res) {
         try{
             const {id} = req.params
             if (!id) {
-                throw Error("MISSING");
+                throw {
+                    type: "MISSING", 
+                    model: "PLAYLIST", 
+                    method: "REMOVE_TRACK",
+                    extra: "ID"
+                }
             }
             const {track} = req.body
             if (!track) {
-                throw Error("MISSING")
+                throw {
+                    type: "MISSING", 
+                    model: "PLAYLIST", 
+                    method: "REMOVE_TRACK",
+                    extra: "TRACK"
+                }
             }
             if (!await Track.findById(track)){
-                throw new Error("INVALID")
+                throw {
+                    type: "NOT_FOUND", 
+                    model: "PLAYLIST", 
+                    method: "REMOVE_TRACK",
+                    extra: "TRACK"
+                }
             }
             const query = {
                 _id: id,
@@ -106,9 +171,17 @@ module.exports = {
                 new: true
             }
             const playlist = await Playlist.findOneAndUpdate(query, update, options)
-            res.json(playlist)
+            if (!playlist) {
+                throw {
+                    type: "NOT_FOUND", 
+                    model: "PLAYLIST", 
+                    method: "REMOVE_TRACK",
+                    extra: "PLAYLIST"
+                }
+            }
+            res.playlist.updated(playlist)
         } catch(e) {
-            res.status(400).json({e: e.message})
+            res.error(e)
         }
     },
     update: async function(req, res) {
@@ -116,10 +189,20 @@ module.exports = {
             const {id} = req.params
             const {name} = req.body
             if (!id) {
-                throw new Error("MISSING")
+                throw {
+                    type: "MISSING", 
+                    model: "PLAYLIST", 
+                    method: "UPDATE",
+                    extra: "ID"
+                }
             }
             if (!name) {
-                throw new Error("INVALID")
+                throw {
+                    type: "MISSING", 
+                    model: "PLAYLIST", 
+                    method: "UPDATE",
+                    extra: "NAME"
+                }
             }
             const query = {
                 _id: id,
@@ -133,23 +216,26 @@ module.exports = {
                 new: true
             }
             const playlist = await Playlist.findOneAndUpdate(query, update, options)
-            res.json(playlist)
+            res.playlist.updated(playlist)
         } catch(e) {
-            res.status(400).json({e: e.message})
+            res.error(e)
         }
     },
     delete: async function(req, res) {
         try {
             const {id} = req.params
             if (!id) {
-                throw Error("MISSING")
+                throw {
+                    type: "MISSING", 
+                    model: "PLAYLIST", 
+                    method: "DELETE",
+                    extra: "ID"
+                }
             }
             await Playlist.findByIdAndDelete(id)
-            res.json({
-                success: true
-            })
+            res.playlist.deleted(playlist)
         } catch(e) {
-            res.status(400).json({e: e.message})
+            res.error(e)
         }
     }
 }

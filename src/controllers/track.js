@@ -5,7 +5,17 @@ module.exports = {
         try{
             const {title, author, album, path} = req.body
             if (!title || !author || !album || !path) {
-                throw new Error("MISSING")
+                throw {
+                    type: "MISSING", 
+                    model: "TRACK", 
+                    method: "CREATE",
+                    extra: [
+                        title ? undefined : "TITLE", 
+                        author ? undefined : "AUTHOR", 
+                        album ? undefined : "ALBUM", 
+                        path ? undefined : "PATH", 
+                    ].filter(entry => entry).join(" ")
+                }
             }
             const track = await Track.create({
                 title,
@@ -13,9 +23,9 @@ module.exports = {
                 album,
                 path
             })
-            res.status(201).json(track)
+            res.track.created(track)
         } catch (e) {
-            res.status(400).json({e: e.message})
+            res.error(e)
         }
     },
     get: async function(req, res){
@@ -23,22 +33,30 @@ module.exports = {
             const {id} = req.params
             const track = await Track.findById(id)
             if (!track) {
-                throw Error("NOT_FOUND")
+                throw {
+                    type: "NOT_FOUND", 
+                    model: "TRACK", 
+                    method: "GET"
+                }
             }
-            res.json(track)
+            res.track.one(track)
         } catch (e) {
-            res.status(400).json({e: e.message})
+            res.error(e)
         }
     },
     index: async function(_, res){
         try{
             const tracks = await Track.find()
             if (!tracks) {
-                throw Error("NOT_FOUND")
+                throw {
+                    type: "NOT_FOUND", 
+                    model: "TRACK", 
+                    method: "INDEX"
+                }
             }
-            res.json(tracks)
+            res.track.many(tracks)
         } catch (e) {
-            res.status(400).json({e: e.message})
+            res.error(e)
         }
     },
     getByName: async function(req, res) {
@@ -48,11 +66,15 @@ module.exports = {
                 name
             })
             if (!track) {
-                throw Error("NOT_FOUND")
+                throw {
+                    type: "NOT_FOUND", 
+                    model: "TRACK", 
+                    method: "GET_BY_NAME"
+                }
             }
-            res.json(track)
+            res.track.one(track)
         } catch(e) {
-            res.status(400).json({e: e.message})
+            res.error(e)
         }
     }
 }

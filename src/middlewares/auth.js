@@ -4,11 +4,21 @@ module.exports = {
     auth: async function(req, res, next) {
         try{
             if (!req.headers) {
-                throw new Error("MISSING_AUTH")
+                throw {
+                    type: "MISSING", 
+                    model: "", 
+                    method: "AUTH",
+                    extra: "AUTHORIZATION_HEADER"
+                }
             }
             const bearer = req.headers.authorization
             if (!bearer) {
-                throw new Error("MISSING")
+                throw {
+                    type: "MISSING", 
+                    model: "", 
+                    method: "AUTH",
+                    extra: "BEARER_TOKEN"
+                }
             }
             const [_, token] = bearer.split("Bearer ")
             const payload = jwt.verify(token, process.env.AUTH_SECRET)
@@ -17,7 +27,7 @@ module.exports = {
             }
             next()
         } catch (e) {
-            res.status(400).json({e: e.message})
+            res.error(e)
         }
     }
 }

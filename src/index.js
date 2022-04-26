@@ -7,6 +7,7 @@ const server = express()
 
 server.use(cors())
 server.use(express.json())
+server.use(require("./view"))
 server.use(require("./routes"))
 
 const PORT = process.env.PORT || 3001
